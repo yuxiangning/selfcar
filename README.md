@@ -21,7 +21,9 @@ This car only allow me to steering from 50 to 100 degrees, this is the real 'har
 Software
 ========
 
-My plan is to start recording some data with this car, hopefully after fixing the motor and gears. Then we could use any machine learning library to handle the data. The image sequence is data/*.png files, and steering data is data/steer.csv.
+My plan is to start recording some data with this car, hopefully after fixing the motor and gears. Then we could use any machine learning library to handle the data.
+
+The image sequence is saved in data/*.png files, and steering data in data/steer.csv.
 
 Status
 ======
