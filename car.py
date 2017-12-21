@@ -8,8 +8,8 @@ from picamera import PiCamera
 
 class Car:
 	def __init__(self):
-		p_pin = 14
-		d_pin = 18
+		motor_p_pin = 14
+		motor_d_pin = 18
 		steer_pin = 12
 
 		self.throttle = 10	# 0 to 100, the higher the faster
@@ -20,13 +20,13 @@ class Car:
 
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
-		GPIO.setup(p_pin, GPIO.OUT)
-		GPIO.setup(d_pin, GPIO.OUT)
+		GPIO.setup(motor_p_pin, GPIO.OUT)
+		GPIO.setup(motor_d_pin, GPIO.OUT)
 		GPIO.setup(steer_pin, GPIO.OUT)
 
 		# we don't support reverse gear yet :)
-		GPIO.output(p_pin, GPIO.HIGH)
-		self.d_pwm = GPIO.PWM(d_pin, 50)
+		GPIO.output(motor_p_pin, GPIO.HIGH)
+		self.d_pwm = GPIO.PWM(motor_d_pin, 50)
 		self.s_pwm = GPIO.PWM(steer_pin, 50)
 
 		self.s_pwm.start(6.67)
@@ -68,6 +68,7 @@ class Car:
 		k = self.stdscr.getch()
 		if k == ord('q'):
 			return False
+
 		if k== ord('a'):
 			# left
 			self.UpdateSteer(-5)
@@ -80,22 +81,27 @@ class Car:
 		elif k == ord('s'):
 			# de-accel
 			self.UpdateThrottle(-5)
-
 		return True
 
 	def Run(self):
-		fps = 30
+		# capture dimention
+		fps = 20
+		width = 160
+		height = 120
 		self.BeginKeyBoardInput()
 		camera = PiCamera()
-		camera.resolution = (320, 240)
-		camera.framerate =32 
-		rawCapture = PiRGBArray(camera, size = (320, 240))
+		camera.resolution = (width, height)
+		camera.framerate = fps
+		rawCapture = PiRGBArray(camera, size = (width, height))
 		seq = 0
 		begin = time.time()
 		fd = open('./data/steer.csv', 'a')
 
 		for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
 			if self.HandleKeyBoardIntput() == False:
+				break
+
+			if seq > 10:
 				break
 
 			image = frame.array
