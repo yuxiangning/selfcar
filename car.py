@@ -64,14 +64,6 @@ class Car:
 		self.stdscr.keypad(0)
 		curses.endwin()
 
-	def KeyBoardInput(self):
-		i,o,e = select.select([sys.stdin], [], [], 0.0001)
-		for s in i:
-			if s == sys.stdin:
-				input = sys.stdin.read(1)
-				return s
-		return 0
-
 	def HandleKeyBoardIntput(self):
 		k = self.stdscr.getch()
 		if k == ord('q'):
