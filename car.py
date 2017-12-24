@@ -110,9 +110,8 @@ class Car:
 				cv2.imwrite(imgpath, image)
 				rec = name + ',' + str(self.steer_angle) + '\n'
 				fd.write(rec)
-			else:
-				self.PreProcess(image, width, height)
 
+			image = self.PreProcess(image, width, height)
 			rawCapture.truncate(0)
 
 			seq += 1
@@ -142,10 +141,11 @@ class Car:
 	def PreProcess(self, img, width, height):
 		th, img = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY);
 		img = self.TopView(img, width, height)
-		img = cv2.resize(img, (40, 30))
+		img = cv2.resize(img, (40, 32))
+		return img
 
 # global params
-recording = False
+recording = True
 try:
 	c = Car()
 	c.Run(recording)
