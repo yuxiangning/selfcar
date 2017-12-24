@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import cv2
+import numpy as np
 import sys
 import curses
 from picamera.array import PiRGBArray
@@ -83,12 +84,13 @@ class Car:
 			self.UpdateThrottle(-5)
 		return True
 
-	def Run(self):
+	def Run(self, recording):
 		# capture dimention
-		fps = 20
+		fps = 30
 		width = 160
-		height = 120
-		self.BeginKeyBoardInput()
+		height = 128
+		if recording == True:
+			self.BeginKeyBoardInput()
 		camera = PiCamera()
 		camera.resolution = (width, height)
 		camera.framerate = fps
@@ -98,25 +100,25 @@ class Car:
 		fd = open('./data/steer.csv', 'a')
 
 		for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-			if self.HandleKeyBoardIntput() == False:
-				break
-
-			if seq > 10:
+			if recording and self.HandleKeyBoardIntput() == False:
 				break
 
 			image = frame.array
-			name = str(seq).zfill(5)
-			imgpath = './data/' + name + '.png'
-			cv2.imwrite(imgpath, image)
-			rec = name + ',' + str(self.steer_angle) + '\n'
-			fd.write(rec)
+			if recording == True:
+				name = str(seq).zfill(5)
+				imgpath = './data/' + name + '.png'
+				cv2.imwrite(imgpath, image)
+				rec = name + ',' + str(self.steer_angle) + '\n'
+				fd.write(rec)
+			else:
+				self.PreProcess(image, width, height)
 
 			rawCapture.truncate(0)
-			end = time.time()
-			delay = 1.0 / fps - (end - begin)
-			if delay > 0.0:
-				time.sleep(delay)	
+
 			seq += 1
+			if not (seq % 100):
+				end = time.time()
+				print("fps %d\n", seq/(end - begin))
 
 		fd.close()
 
@@ -125,11 +127,27 @@ class Car:
 		self.d_pwm.stop()
 		GPIO.cleanup()
 
-		self.EndKeyBoardInput()
+		if recording:
+			self.EndKeyBoardInput()
 
+	def TopView(self, img, width, height):
+		indent = 20
+		level = 50
+		pt1 = np.float32([[indent, level], [width - indent, level], [0, height], [width, height]])
+		pt2 = np.float32([[0, 0],[width, 0], [0, height],[width, height]])
 
+		M = cv2.getPerspectiveTransform(pt1, pt2)
+		return cv2.warpPerspective(img, M, (width, height))
+
+	def PreProcess(self, img, width, height):
+		th, img = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY);
+		img = self.TopView(img, width, height)
+		img = cv2.resize(img, (40, 30))
+
+# global params
+recording = False
 try:
 	c = Car()
-	c.Run()
+	c.Run(recording)
 finally:
 	c.Halt()
