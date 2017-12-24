@@ -139,7 +139,8 @@ class Car:
 		return cv2.warpPerspective(img, M, (width, height))
 
 	def PreProcess(self, img, width, height):
-		th, img = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY);
+		img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+		th, img = cv2.threshold(img, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 		img = self.TopView(img, width, height)
 		img = cv2.resize(img, (40, 32))
 		return img
